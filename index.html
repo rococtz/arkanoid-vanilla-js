@@ -1,0 +1,464 @@
+<html>
+
+<head>
+
+  <style>
+    #main-canvas {
+      border: 1px solid black;
+      cursor: none;
+    }
+  </style>
+
+</head>
+
+<body>
+  <script>
+    let HEIGHT = 700,
+      WIDTH = 700;
+
+
+    window.onload = () => {
+
+      let canvas = document.createElement('canvas');
+      canvas.setAttribute('id', 'main-canvas');
+      canvas.width = HEIGHT;
+      canvas.height = WIDTH;
+
+      let context = canvas.getContext('2d');
+      document.body.appendChild(canvas);
+
+
+      const getAbsoluteState = (state, reference) => {
+        let newState = Object.assign({}, state);
+
+        newState.paddle.position.x = state.paddle.position.x * reference / 100;
+        newState.paddle.position.y = state.paddle.position.y * reference / 100;
+        newState.paddle.width = state.paddle.width * reference / 100;
+        newState.paddle.height = state.paddle.height * reference / 100;
+
+        newState.ball.position.x = state.ball.position.x * reference / 100;
+        newState.ball.position.y = state.ball.position.y * reference / 100;
+        newState.ball.radius = state.ball.radius * reference / 100;
+        newState.ball.speed = state.ball.speed * reference / 100;
+
+        newState.scene.limits.x.max = state.scene.limits.x.max * reference / 100;
+        newState.scene.limits.y.max = state.scene.limits.y.max * reference / 100;
+
+        newState.blocks = state.blocks.map(block => {
+          return Object.assign({}, block, {
+            position: {
+              x: block.position.x * reference / 100,
+              y: block.position.y * reference / 100
+            },
+            width: block.width * reference / 100,
+            height: block.height * reference / 100
+          })
+        });
+        return newState;
+      };
+
+      // normalized state represents sizes on a  1 to 100 scale
+      // where 100 is the width of the scene
+      let normalizedState = {
+        paddle: {
+          position: {
+            x: 50,
+            y: 95
+          },
+          width: 20,
+          height: 2.5
+        },
+        ball: {
+          position: {
+            x: 20,
+            y: 93
+          },
+          direction: {
+            x: 1,
+            y: 1,
+            multiplier: 1
+          },
+          radius: 1,
+          speed: 1
+        },
+        blocks: [{
+          id: '1',
+          position: {
+            x: 5,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '2',
+          position: {
+            x: 15,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '3',
+          position: {
+            x: 25,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '4',
+          position: {
+            x: 35,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '5',
+          position: {
+            x: 45,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '6',
+          position: {
+            x: 55,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '7',
+          position: {
+            x: 65,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '8',
+          position: {
+            x: 75,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '9',
+          position: {
+            x: 85,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '9',
+          position: {
+            x: 95,
+            y: 15
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '10',
+          position: {
+            x: 10,
+            y: 12
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '11',
+          position: {
+            x: 20,
+            y: 12
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '12',
+          position: {
+            x: 30,
+            y: 12
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '13',
+          position: {
+            x: 40,
+            y: 12
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '14',
+          position: {
+            x: 50,
+            y: 12
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '15',
+          position: {
+            x: 60,
+            y: 12
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '16',
+          position: {
+            x: 70,
+            y: 12
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '17',
+          position: {
+            x: 80,
+            y: 12
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }, {
+          id: '18',
+          position: {
+            x: 90,
+            y: 12
+          },
+          width: 9,
+          height: 2,
+          lives: 1
+        }],
+        scene: {
+          limits: {
+            x: {
+              min: 1,
+              max: 100
+            },
+            y: {
+              min: 1,
+              max: 100
+            }
+          }
+        }
+      };
+
+      let state = getAbsoluteState(normalizedState, WIDTH);
+
+      const setDirectionMultiplier = (state, multiplier) => {
+        let newState = Object.assign({}, state);
+        newState.ball.direction.multiplier = multiplier;
+        return newState;
+      };
+
+      const handleCollisionBlock = (state, id) => {
+        let newState = Object.assign({}, state);
+
+        newState.blocks = state.blocks.map(block => {
+          if (block.id !== id) {
+            return block;
+          } else {
+
+            if (block.lives === -1) {
+              return block;
+            } else {
+              block.lives--;
+              if (block.lives > 0) {
+                return block;
+              } else {
+                return null;
+              }
+            }
+          }
+        });
+
+        newState.blocks = newState.blocks.filter(block => block ? true : false);
+
+        return newState;
+      };
+
+      const getBoundingBoxBall = (ball) => {
+        return {
+          left: Math.floor(ball.position.x - ball.radius),
+          right: Math.ceil(ball.position.x + ball.radius),
+          top: Math.floor(ball.position.y - ball.radius),
+          bottom: Math.ceil(ball.position.y + ball.radius)
+        }
+      }
+
+      const getBoundingBoxPaddle = (paddle) => {
+        return {
+          left: Math.floor(paddle.position.x - paddle.width / 2),
+          right: Math.ceil(paddle.position.x + paddle.width / 2),
+          top: Math.floor(paddle.position.y - paddle.height / 2),
+          bottom: Math.floor(paddle.position.y + paddle.height / 2)
+        }
+      };
+
+
+      const getHasCollision = (direction, ballBox, itemBox) => {
+        let x = false,
+          y = false;
+
+        // HITTING FROM THE TOP -> BOTTOM
+        if (direction.y === 1 && ballBox.bottom >= itemBox.top && ballBox.top <= itemBox.top && ballBox.right >= itemBox.left && ballBox.left <= itemBox.right) {
+          y = true;
+        }
+
+        // HITTING FROM THE BOTTOM -> TOP
+        if (direction.y === -1 && ballBox.top <= itemBox.bottom && ballBox.bottom >= itemBox.bottom && ballBox.right >= itemBox.left && ballBox.left <= itemBox.right) {
+          y = true;
+        }
+
+        return { x, y };
+      };
+
+      const getHasNewDirection = (state) => {
+
+        let direction = state.ball.direction,
+          paddleBox = getBoundingBoxPaddle(state.paddle),
+          ballBox = getBoundingBoxBall(state.ball),
+          directionMultiplier;
+
+        let collisionBlockId;
+
+        let ballPaddleCollision = getHasCollision(direction, ballBox, paddleBox);
+        let blockCollisions = state.blocks.map(block => {
+          let blockCollision = getHasCollision(direction, ballBox, getBoundingBoxPaddle(block));
+          if (blockCollision.x || blockCollision.y) {
+            collisionBlockId = block.id;
+          }
+          return blockCollision;
+        });
+        let hasXCollision = blockCollisions.concat(ballPaddleCollision).some(collision => collision.x);
+        let hasYCollision = blockCollisions.concat(ballPaddleCollision).some(collision => collision.y);
+
+        // let blockCollisions = state.blocks.map()
+        if (ballPaddleCollision.y) {
+          let halfPaddle = (paddleBox.right - paddleBox.left) / 2,
+            difference;
+          if (state.ball.position.x > state.paddle.position.x) {
+            difference = state.ball.position.x - state.paddle.position.x;
+          } else {
+            difference = state.paddle.position.x - state.ball.position.x;
+          }
+          directionMultiplier = difference / halfPaddle;
+        }
+
+        return {
+          x: hasXCollision,
+          y: hasYCollision,
+          directionMultiplier,
+          collisionBlockId
+        }
+      }
+
+      const getNewBallPosition = (state) => {
+        let newState = Object.assign({}, state),
+          hasNewDirection = getHasNewDirection(state);
+
+        if (hasNewDirection.directionMultiplier) {
+          newState = setDirectionMultiplier(newState, hasNewDirection.directionMultiplier);
+        }
+
+        if (hasNewDirection.collisionBlockId) {
+          newState = handleCollisionBlock(newState, hasNewDirection.collisionBlockId);
+        }
+
+        if (hasNewDirection.x || state.ball.position.x <= state.scene.limits.x.min ||
+          state.ball.position.x >= state.scene.limits.x.max) {
+
+          newState.ball.direction.x *= -1;
+        }
+        newState.ball.position.x += newState.ball.speed * newState.ball.direction.x * newState.ball.direction.multiplier;
+
+        if (hasNewDirection.y || state.ball.position.y <= state.scene.limits.y.min || state.ball.position.y >= state.scene.limits.y.max) {
+          newState.ball.direction.y *= -1;
+        }
+        newState.ball.position.y += newState.ball.speed * newState.ball.direction.y;
+
+        return newState;
+      };
+
+
+      const getUpdatedPaddlePosition = (state, x, y) => {
+        let newState = Object.assign({}, state);
+        newState.paddle.position.x = x;
+        newState.paddle.position.y = y;
+        return newState;
+      };
+
+
+      canvas.addEventListener("mousemove", event => {
+        state = getUpdatedPaddlePosition(state, event.layerX, state.paddle.position.y);
+      });
+
+      const render = (state, context) => {
+        // CLEAR SCENE
+        context.clearRect(0, 0, 700, 700);
+        context.beginPath();
+
+        // RENDER BALL
+        context.ellipse(state.ball.position.x, state.ball.position.y, state.ball.radius, state.ball.radius, 0, 0, Math.PI * 2);
+
+        // RENDER PADDLE
+        context.moveTo(state.paddle.position.x - state.paddle.width / 2, state.paddle.position.y - state.paddle.height / 2);
+        context.lineTo(state.paddle.position.x + state.paddle.width / 2, state.paddle.position.y - state.paddle.height / 2);
+        context.lineTo(state.paddle.position.x + state.paddle.width / 2, state.paddle.position.y + state.paddle.height / 2);
+        context.lineTo(state.paddle.position.x - state.paddle.width / 2, state.paddle.position.y + state.paddle.height / 2);
+        context.lineTo(state.paddle.position.x - state.paddle.width / 2, state.paddle.position.y - state.paddle.height / 2);
+
+        // RENDER BLOCKS
+        state.blocks.forEach(block => {
+
+          context.moveTo(block.position.x - block.width / 2, block.position.y - block.height / 2);
+          context.lineTo(block.position.x + block.width / 2, block.position.y - block.height / 2);
+          context.lineTo(block.position.x + block.width / 2, block.position.y + block.height / 2);
+          context.lineTo(block.position.x - block.width / 2, block.position.y + block.height / 2);
+          context.lineTo(block.position.x - block.width / 2, block.position.y - block.height / 2);
+
+        });
+
+        context.stroke();
+
+      };
+
+      const animate = () => {
+        state = getNewBallPosition(state);
+        render(state, context);
+        // setDirectionMultiplier(1);
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+
+    };
+  </script>
+
+</body>
+
+</html>

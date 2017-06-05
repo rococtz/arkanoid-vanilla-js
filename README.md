@@ -1,0 +1,1 @@
+Arkanoid game built with HTML 2D Canvas and vanilla js only
